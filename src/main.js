@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { buildWorld } from './world.js';
 import { Game } from './game.js';
 import { hud } from './ui.js';
+import { LofiPlayer } from './audio.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -17,6 +18,12 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#d8d3cb');
 scene.fog = new THREE.Fog('#d8d3cb', 22, 60);
+
+// Day / night lighting rig. Every value is lerped by nightMix each frame.
+const DAY = { bg: new THREE.Color('#d8d3cb'), hemiSky: new THREE.Color('#eae4da'), hemiGround: new THREE.Color('#8c7a67'), hemi: 1.4, ambient: 0.35, sun: 2.8, sunColor: new THREE.Color('#ffe7c9'), rim: 0.6, exposure: 1.0, lamp: 1.0, emissive: 1.0, fogNear: 22, fogFar: 60 };
+const NIGHT = { bg: new THREE.Color('#1c1d26'), hemiSky: new THREE.Color('#3a4157'), hemiGround: new THREE.Color('#1f1a17'), hemi: 0.55, ambient: 0.08, sun: 0.25, sunColor: new THREE.Color('#8fa3d1'), rim: 0.25, exposure: 0.95, lamp: 2.4, emissive: 2.6, fogNear: 14, fogFar: 42 };
+let nightMix = 0, nightTarget = 0;
+const tmpColor = new THREE.Color();
 
 const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 200);
 camera.position.set(5.6, 4.4, 11.6);
@@ -55,6 +62,7 @@ scene.add(sun);
 const rim = new THREE.DirectionalLight('#cfd8e6', 0.6);
 rim.position.set(8, 6, -8);
 scene.add(rim);
+const ambient = scene.children.find((o) => o.isAmbientLight);
 
 const world = buildWorld(scene);
 const game = new Game(scene, world);
@@ -103,6 +111,68 @@ controls.addEventListener('start', () => { camTween.t = 1; userMovedCamera = tru
 game.onLevelView = (level) => frameLevel(level);
 frameLevel(game.level, true);
 
+// Emissive bulbs (lanterns, string lights, paper lanterns) brighten at night.
+const emissives = new Set();
+function collectEmissives() {
+  scene.traverse((o) => {
+    if (o.isMesh && o.material && o.material.emissiveIntensity > 0 && !emissives.has(o.material)) {
+      o.material.userData.baseEmissive = o.material.emissiveIntensity;
+      emissives.add(o.material);
+    }
+  });
+}
+function applyLighting() {
+  const m = nightMix;
+  scene.background.copy(DAY.bg).lerp(NIGHT.bg, m);
+  scene.fog.color.copy(scene.background);
+  scene.fog.near = THREE.MathUtils.lerp(DAY.fogNear, NIGHT.fogNear, m);
+  scene.fog.far = THREE.MathUtils.lerp(DAY.fogFar, NIGHT.fogFar, m);
+  hemi.color.copy(DAY.hemiSky).lerp(NIGHT.hemiSky, m);
+  hemi.groundColor.copy(DAY.hemiGround).lerp(NIGHT.hemiGround, m);
+  hemi.intensity = THREE.MathUtils.lerp(DAY.hemi, NIGHT.hemi, m);
+  if (ambient) ambient.intensity = THREE.MathUtils.lerp(DAY.ambient, NIGHT.ambient, m);
+  sun.intensity = THREE.MathUtils.lerp(DAY.sun, NIGHT.sun, m);
+  sun.color.copy(DAY.sunColor).lerp(NIGHT.sunColor, m);
+  rim.intensity = THREE.MathUtils.lerp(DAY.rim, NIGHT.rim, m);
+  renderer.toneMappingExposure = THREE.MathUtils.lerp(DAY.exposure, NIGHT.exposure, m);
+  const em = THREE.MathUtils.lerp(DAY.emissive, NIGHT.emissive, m);
+  for (const mat of emissives) mat.emissiveIntensity = (mat.userData.baseEmissive ?? 1) * em;
+}
+const nightBtn = document.getElementById('night-btn');
+function setNight(on, instant = false) {
+  nightTarget = on ? 1 : 0;
+  if (instant) nightMix = nightTarget;
+  nightBtn.textContent = on ? 'Day' : 'Night';
+  nightBtn.setAttribute('aria-pressed', String(on));
+  document.body.classList.toggle('night', on);
+  try { localStorage.setItem('aswini-diner-night', on ? '1' : '0'); } catch { /* ignore */ }
+}
+nightBtn.addEventListener('click', () => setNight(nightTarget < 0.5));
+let savedNight = false;
+try { savedNight = localStorage.getItem('aswini-diner-night') === '1'; } catch { /* ignore */ }
+setNight(savedNight, true);
+// Lofi ambience: starts with the first "Open for service" click (browsers need a gesture), toggle in the HUD.
+const music = new LofiPlayer();
+const musicBtn = document.getElementById('music-btn');
+let musicWanted = true;
+try { musicWanted = localStorage.getItem('aswini-diner-music') !== '0'; } catch { /* ignore */ }
+function reflectMusic() {
+  musicBtn.setAttribute('aria-pressed', String(music.playing));
+  musicBtn.textContent = music.playing ? 'Music on' : 'Music off';
+}
+musicBtn.addEventListener('click', () => {
+  music.toggle();
+  musicWanted = music.playing;
+  try { localStorage.setItem('aswini-diner-music', musicWanted ? '1' : '0'); } catch { /* ignore */ }
+  reflectMusic();
+});
+const startMusic = () => { if (musicWanted && !music.playing) music.play().then(reflectMusic); };
+hud.start.addEventListener('click', startMusic);
+hud.marketDone.addEventListener('click', startMusic);
+reflectMusic();
+game.onSceneChange = () => collectEmissives();
+collectEmissives();
+
 // Picking
 const ray = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -134,6 +204,7 @@ hud.levelsOpen.addEventListener('click', () => game.openLevels());
 hud.marketLevels.addEventListener('click', () => game.openLevels());
 hud.levelsClose.addEventListener('click', () => game.closeLevels());
 hud.nameInput.addEventListener('input', () => { hud.start.disabled = !hud.nameInput.value.trim(); });
+document.querySelector('.brand').addEventListener('click', () => game.editName());
 hud.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && hud.nameInput.value.trim()) hud.start.click(); });
 let startedAt = 0;
 window.__game = game;
@@ -153,7 +224,11 @@ function tick() {
   lastTick = performance.now();
   const dt = Math.min(clock.getDelta(), 0.12);
   flickerT += dt;
-  world.lights.forEach((l, i) => { l.userData.base ??= l.intensity; l.intensity = l.userData.base + Math.sin(flickerT * 3.1 + i * 1.7) * 0.18 + Math.sin(flickerT * 7.3 + i) * 0.08; });
+  nightMix += (nightTarget - nightMix) * Math.min(1, dt * 1.6);
+  if (Math.abs(nightTarget - nightMix) < 0.002) nightMix = nightTarget;
+  applyLighting();
+  const lampScale = THREE.MathUtils.lerp(DAY.lamp, NIGHT.lamp, nightMix);
+  world.lights.forEach((l, i) => { l.userData.base ??= l.intensity; l.intensity = l.userData.base * lampScale + Math.sin(flickerT * 3.1 + i * 1.7) * 0.18 + Math.sin(flickerT * 7.3 + i) * 0.08; });
   game.update(dt);
   updateCamTween(dt);
   controls.update();

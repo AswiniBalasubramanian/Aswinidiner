@@ -177,6 +177,7 @@ export const hud = {
   marketLevels: document.getElementById('market-levels'),
   nameField: document.getElementById('name-field'),
   nameInput: document.getElementById('diner-name'),
+  nameLabel: document.getElementById('name-label'),
   brandKr: document.querySelector('.brand-kr'),
   brandEn: document.querySelector('.brand-en'),
   levelsBtn: document.getElementById('levels-btn'),

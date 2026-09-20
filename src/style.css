@@ -92,11 +92,22 @@ button[hidden] { display: none !important; }
 .top-right { display: flex; align-items: flex-start; gap: 10px; }
 .chip-btn { pointer-events: auto; appearance: none; border: 1px solid var(--line); background: var(--paper-2); backdrop-filter: blur(10px); color: var(--ink); font: 500 12px var(--font); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 18px; height: 47px; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
 .chip-btn:hover { background: var(--paper); }
+.chip-btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+body.night { --paper-2: rgba(38, 33, 29, 0.78); --paper: #2b2622; --ink: #f1e9dc; --ink-2: #b8ada0; --line: rgba(241, 233, 220, 0.14); background: #1b1a1f; }
+body.night .card { background: #2b2622; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
+body.night .item, body.night .lvl { background: rgba(255,255,255,0.04); }
+body.night #start, body.night .item button, body.night .lvl button { background: var(--paper-3, #f1e9dc); color: #1b1713; }
+body.night .overlay { background: rgba(20, 18, 22, 0.55); }
+body.night .field input { background: rgba(255,255,255,0.06); color: var(--ink); }
+body.night #hud::before { background: radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%); }
 .field { display: flex; flex-direction: column; gap: 8px; margin: 0 0 22px; }
 .field span { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); }
 .field input { appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,0.5); border-radius: 10px; padding: 12px 14px; font: 500 18px var(--serif); color: var(--ink); outline: none; transition: border-color 0.15s; }
 .field input:focus { border-color: var(--ink-2); }
 .field[hidden] { display: none; }
+.brand { pointer-events: auto; cursor: pointer; transition: background 0.15s; }
+.brand:hover { background: var(--paper); }
+.brand-en small { font-weight: 400; letter-spacing: 0.1em; opacity: 0.7; }
 #start:disabled { background: rgba(27,23,19,0.18); cursor: default; transform: none; }
 
 .card.levels { width: min(640px, calc(100vw - 48px)); }

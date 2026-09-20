@@ -112,8 +112,9 @@ export class Game {
 
     // The market is reachable from the start screen once there is something to spend.
     hud.marketOpen.hidden = this.wallet <= 0 && this.upgrades.size === 0;
-    // First visit: ask for the diner's name before opening.
-    hud.nameField.hidden = !!this.name;
+    // First visit: ask for the diner's name before opening; afterwards it stays editable.
+    hud.nameInput.value = this.name;
+    hud.nameLabel.textContent = this.name ? 'Diner name' : 'Name your diner';
     hud.start.disabled = !this.name;
     if (!this.name) setTimeout(() => hud.nameInput.focus(), 300);
     this.updateHud();
@@ -153,6 +154,7 @@ export class Game {
       if (!this.levelGroups.has(lv)) { this.levelGroups.set(lv, buildLevelArea(this.world, lv)); resize(); }
     }
     for (const [lv, g] of this.levelGroups) g.visible = lv <= this.level;
+    this.onSceneChange?.();
   }
 
   seatOpen(i) { return (LAYOUT.stools[i]?.level ?? 1) <= this.level; }
@@ -160,22 +162,49 @@ export class Game {
   applyName() {
     const n = this.name || 'Aswini Diner';
     hud.brandKr.textContent = n;
-    hud.brandEn.innerHTML = `Diner · <b id="stat-level">Level 1</b>`;
+    hud.brandEn.innerHTML = `Diner · <b id="stat-level">Level 1</b> <small>· edit</small>`;
     hud.level = document.getElementById('stat-level');
+    hud.brandKr.parentElement.title = 'Rename the diner';
     setSignText(n);
     document.title = n;
   }
 
+  // Rename from the start card or by clicking the name chip in the HUD.
+  setName(v) {
+    v = (v || '').trim().slice(0, 24);
+    if (!v || v === this.name) return false;
+    this.name = v;
+    hud.nameInput.value = v;
+    hud.nameLabel.textContent = 'Diner name';
+    hud.start.disabled = false;
+    this.applyName();
+    this.save();
+    toast(v);
+    return true;
+  }
+
+  // Open the start card focused on the name field (pauses a running service).
+  editName() {
+    this.paused = this.running;
+    hud.marketCard.hidden = true;
+    hud.levelsCard.hidden = true;
+    hud.card.hidden = false;
+    hud.overlay.classList.remove('hidden');
+    hud.start.textContent = this.running ? 'Back to service' : hud.start.textContent;
+    setTimeout(() => { hud.nameInput.focus(); hud.nameInput.select(); }, 50);
+  }
+
   // --- Flow -----------------------------------------------------------------
   start() {
-    if (!this.name) {
-      const v = hud.nameInput.value.trim();
-      if (!v) return;
-      this.name = v.slice(0, 24);
-      hud.nameField.hidden = true;
-      this.applyName();
-      this.save();
-      toast(this.name);
+    const v = hud.nameInput.value.trim();
+    if (!v) { hud.nameInput.focus(); return; }
+    this.setName(v);
+    if (this.running && this.paused) {
+      // Came from the rename chip mid-service: just resume.
+      this.paused = false;
+      hud.overlay.classList.add('hidden');
+      hud.start.textContent = 'Open again';
+      return;
     }
     clearTimeout(this.marketTimer);
     this.paused = false;

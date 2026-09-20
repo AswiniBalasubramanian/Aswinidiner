@@ -32,6 +32,7 @@ outlines; ACES tone mapping, soft shadows and warm lantern point lights.
 - `src/characters.js` — character rig + dishes
 - `src/game.js` — customer / chef / server state machines
 - `src/ui.js` — world-space bubbles and the HUD
+- `src/audio.js` — procedural lofi player
 
 ## Progression
 
@@ -51,4 +52,9 @@ outlines; ACES tone mapping, soft shadows and warm lantern point lights.
   twin-burner stove (30% faster cooking), warm lanterns (+25% patience), street signboard
   (more guests), Bulgogi on the menu (₩12,000).
 - Holding the wrong plate? Click the **dustbin** by the pass — the chef remakes the order.
+- **Rename** the diner any time by clicking the name chip in the HUD (or on the start card).
+- **Night / Day** chip cross-fades the whole lighting rig — sun, sky, fog, exposure, lanterns and
+  every bulb — and remembers your choice.
+- **Music** chip toggles a procedural lofi loop (Rhodes-style chords, soft bass, brushed drums,
+  vinyl crackle) synthesised live with the Web Audio API — no audio files, nothing streamed.
 - Progress is saved in `localStorage` (`aswini-diner-save-v1`).
