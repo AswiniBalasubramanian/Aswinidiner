@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aswini Diner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+
+    <div id="hud">
+      <header class="hud-top">
+        <div class="brand">
+          <span class="brand-kr">아스위니 다이너</span>
+          <span class="brand-en">Aswini Diner · <b id="stat-level">Level 1</b></span>
+        </div>
+        <div class="top-right">
+        <div class="stats">
+          <div class="stat"><span class="label">Day</span><span class="value" id="stat-day">1</span></div>
+          <div class="stat"><span class="label">Time</span><span class="value" id="stat-time">3:00</span></div>
+          <div class="stat"><span class="label">Served</span><span class="value" id="stat-served">0</span></div>
+          <div class="stat"><span class="label">Earned</span><span class="value" id="stat-money">₩0</span></div>
+          <div class="stat stat-target"><span class="label">Target</span><span class="value" id="stat-target">₩0</span><span class="tbar"><i id="stat-target-bar"></i></span></div>
+          <div class="stat"><span class="label">Wallet</span><span class="value" id="stat-wallet">₩0</span></div>
+        </div>
+        <button class="chip-btn" id="levels-btn" type="button">Levels</button>
+        </div>
+      </header>
+
+      <div class="tickets" id="tickets"></div>
+
+      <footer class="hud-bottom">
+        <div class="hint" id="hint">Click an empty stool to seat a waiting guest.</div>
+        <div class="legend">
+          <span><i class="dot dot-seat"></i>Seat</span>
+          <span><i class="dot dot-order"></i>Take order</span>
+          <span><i class="dot dot-serve"></i>Serve</span>
+        </div>
+      </footer>
+    </div>
+
+    <div id="overlay" class="overlay">
+      <div class="card" id="card">
+        <p class="eyebrow">A small diorama restaurant</p>
+        <h1 id="card-title">Aswini Diner</h1>
+        <p class="lede">
+          Seat guests, take their orders, let the chef cook, and carry each plate to the right stool
+          before patience runs out. One service is three minutes.
+        </p>
+        <label class="field" id="name-field">
+          <span>Name your diner</span>
+          <input id="diner-name" type="text" maxlength="24" placeholder="Aswini Diner" autocomplete="off" spellcheck="false" />
+        </label>
+        <div class="result">
+          <p class="big" id="result-money">₩0</p>
+          <p class="sub" id="result-sub"></p>
+        </div>
+        <ul class="howto">
+          <li><b>Seat</b> — click an empty stool while a guest is waiting at the door.</li>
+          <li><b>Order</b> — click a seated guest to send their ticket to the kitchen.</li>
+          <li><b>Serve</b> — click the finished plate on the pass, then click the guest.</li>
+          <li><b>Dump</b> — holding the wrong plate? Click the dustbin by the pass and the chef remakes it.</li>
+        </ul>
+        <div class="actions">
+          <button id="start">Open for service</button>
+          <button id="market-open" class="ghost">Visit the market</button>
+          <button id="levels-open" class="ghost">Levels</button>
+        </div>
+        <p class="tip">Drag to look around · scroll to zoom</p>
+      </div>
+
+      <div class="card market" id="market-card" hidden>
+        <div class="market-head">
+          <div>
+            <p class="eyebrow">Market</p>
+            <h1>Upgrade the diner</h1>
+          </div>
+          <div class="wallet"><span class="label">Wallet</span><span class="value" id="market-wallet">₩0</span></div>
+        </div>
+        <p class="lede" id="market-lede"></p>
+        <div class="items" id="market-items"></div>
+        <div class="actions">
+          <button id="market-done">Open for service</button>
+          <button id="market-levels" class="ghost">Levels</button>
+        </div>
+      </div>
+
+      <div class="card levels" id="levels-card" hidden>
+        <div class="market-head">
+          <div>
+            <p class="eyebrow">Level board</p>
+            <h1>Grow the diner</h1>
+          </div>
+          <div class="wallet"><span class="label">Reached</span><span class="value" id="levels-max">Level 1</span></div>
+        </div>
+        <p class="lede">Each level opens more of the restaurant and raises the daily target. Play any level you have reached — switching starts a fresh service.</p>
+        <div class="levels-list" id="levels-list"></div>
+        <div class="actions">
+          <button id="levels-close" class="ghost">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
