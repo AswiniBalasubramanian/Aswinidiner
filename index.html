@@ -15,8 +15,16 @@
     <div id="hud">
       <header class="hud-top">
         <div class="brand">
-          <span class="brand-kr">제주 다이닝</span>
-          <span class="brand-en">Jeju Dining · <b id="stat-level">Level 1</b></span>
+          <button class="lvl-badge" id="level-badge" type="button" aria-label="Open the level board">
+            <span class="lvl-num" id="stat-level-num">1</span>
+            <span class="lvl-meta">
+              <span class="lvl-label" id="stat-level">Level 1</span>
+              <span class="lvl-title" id="stat-level-title">The counter</span>
+            </span>
+          </button>
+          <button class="lvl-edit" id="rename-btn" type="button" aria-label="Rename the diner" title="Rename the diner">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
+          </button>
         </div>
         <div class="top-right">
         <div class="stats">

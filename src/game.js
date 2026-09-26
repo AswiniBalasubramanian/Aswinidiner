@@ -162,10 +162,6 @@ export class Game {
 
   applyName() {
     const n = this.name || 'Jeju Dining';
-    hud.brandKr.textContent = n;
-    hud.brandEn.innerHTML = `Diner · <b id="stat-level">Level 1</b> <small>· edit</small>`;
-    hud.level = document.getElementById('stat-level');
-    hud.brandKr.parentElement.title = 'Rename the diner';
     setSignText(n);
     document.title = n;
   }
@@ -248,6 +244,8 @@ export class Game {
     hud.served.textContent = this.served;
     hud.money.textContent = won(this.money);
     hud.level.textContent = this.levelData.name;
+    hud.levelNum.textContent = this.levelData.level;
+    hud.levelTitle.textContent = this.levelData.title;
     hud.target.textContent = won(this.target);
     hud.target.classList.toggle('met', this.money >= this.target);
     hud.targetBar.style.width = `${Math.min(100, (this.money / this.target) * 100)}%`;
