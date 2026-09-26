@@ -199,7 +199,12 @@ let musicWanted = true;
 try { musicWanted = localStorage.getItem('aswini-diner-music') !== '0'; } catch { /* ignore */ }
 function reflectMusic() {
   musicBtn.setAttribute('aria-pressed', String(music.playing));
-  musicBtn.textContent = music.playing ? '♪ On' : '♪ Off';
+  // Speaker with sound waves when playing, speaker with a cross when muted.
+  const speaker = '<path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z"/>';
+  musicBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + speaker +
+    (music.playing ? '<path d="M15.5 9a4 4 0 0 1 0 6M18.2 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>') + '</svg>';
+  musicBtn.setAttribute('aria-label', music.playing ? 'Mute music' : 'Play music');
+  musicBtn.title = music.playing ? 'Music on' : 'Music off';
 }
 musicBtn.addEventListener('click', () => {
   music.toggle();
