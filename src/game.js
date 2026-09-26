@@ -70,7 +70,7 @@ export class Game {
     this.level = save.level;
     this.maxLevel = Math.max(save.maxLevel, save.level);
     this.wallet = save.wallet;
-    this.name = save.name;
+    this.name = save.name === 'Aswini Diner' ? 'Jeju Dining' : save.name;
     this.upgrades = new Set(save.upgrades);
     this.applied = new Set();
     this.levelGroups = new Map();
@@ -161,7 +161,7 @@ export class Game {
   seatOpen(i) { return (LAYOUT.stools[i]?.level ?? 1) <= this.level; }
 
   applyName() {
-    const n = this.name || 'Aswini Diner';
+    const n = this.name || 'Jeju Dining';
     hud.brandKr.textContent = n;
     hud.brandEn.innerHTML = `Diner · <b id="stat-level">Level 1</b> <small>· edit</small>`;
     hud.level = document.getElementById('stat-level');

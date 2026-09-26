@@ -628,7 +628,7 @@ export function buildWorld(scene) {
   signMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ transparent: true }));
   signMesh.position.set(4.2, 2.3, -4.13);
   root.add(signMesh);
-  setSignText('아스위니 다이너');
+  setSignText('제주 다이닝');
   const plaque = box(0.22, 0.42, 0.04, M.red, 6.0, 1.8, 1.42);
   plaque.name = 'plaque';
 

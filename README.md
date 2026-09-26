@@ -1,4 +1,4 @@
-# Aswini Diner
+# Jeju Dining
 
 A cinematic 3D diorama restaurant game in the spirit of Penguin Diner: a small Korean hanok
 counter restaurant with a chef who cooks, a server you direct, and guests who arrive, order,
