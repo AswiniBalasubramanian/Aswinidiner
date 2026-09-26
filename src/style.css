@@ -103,6 +103,9 @@ button[hidden] { display: none !important; }
 @media (max-width: 1100px) { .hud-top { flex-wrap: wrap; } .top-right { flex-wrap: wrap; justify-content: flex-end; } }
 .chip-btn { pointer-events: auto; appearance: none; border: 1px solid var(--line); background: var(--paper-2); backdrop-filter: blur(10px); color: var(--ink); font: 500 12px var(--font); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 16px; height: 49px; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
 .chip-btn:hover { background: var(--paper); }
+.chip-btn.icon { width: 49px; padding: 0; display: grid; place-items: center; }
+.chip-btn.icon svg { display: block; }
+@media (max-width: 1280px) { .chip-btn.icon { width: 43px; } }
 .chip-btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 body.night { --paper-2: rgba(38, 33, 29, 0.78); --paper: #2b2622; --ink: #f1e9dc; --ink-2: #b8ada0; --line: rgba(241, 233, 220, 0.14); background: #1b1a1f; }
 body.night .card { background: #2b2622; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }

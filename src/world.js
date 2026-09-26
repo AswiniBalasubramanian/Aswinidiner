@@ -632,23 +632,6 @@ export function buildWorld(scene) {
   const plaque = box(0.22, 0.42, 0.04, M.red, 6.0, 1.8, 1.42);
   plaque.name = 'plaque';
 
-  // Noren curtain panels under the front beam
-  const norenM = new THREE.MeshStandardMaterial({ color: '#2f3d4f', roughness: 0.95, side: THREE.DoubleSide });
-  const rod = box(4.4, 0.04, 0.04, M.woodDark, -1.4, 3.1, 1.28);
-  rod.castShadow = false;
-  for (let i = 0; i < 5; i++) {
-    const p = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.62, 1, 6), norenM);
-    const pos = p.geometry.attributes.position;
-    for (let v = 0; v < pos.count; v++) pos.setZ(v, Math.sin(pos.getY(v) * 6 + i) * 0.015);
-    p.geometry.computeVertexNormals();
-    p.position.set(-3.1 + i * 0.86, 2.78, 1.3);
-    p.castShadow = true;
-    root.add(p);
-  }
-  const norenLbl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: labelTexture('식당 · 밥집', { w: 512, h: 128, fg: '#efe4cf', font: '700 64px "Noto Serif KR", serif' }), transparent: true }));
-  norenLbl.position.set(-1.4, 2.8, 1.32);
-  root.add(norenLbl);
-
   // Wooden menu boards on the back wall
   const menuItems = ['비빔밥 9,000', '라면 6,000', '김밥 5,000', '떡볶이 7,000'];
   menuItems.forEach((t, i) => {
