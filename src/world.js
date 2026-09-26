@@ -137,8 +137,13 @@ function boardTexture(text) {
 // Hanging name board (hyeonpan) centred under the front eave.
 function nameBoard() {
   const g = new THREE.Group();
-  g.position.set(-0.6, 2.9, 4.36);
-  const W = 2.5, H = 0.6;
+  // Roof front slope runs from the eave (z 4.4, y 3.35) up to the ridge (z 0, y 5.1).
+  const slopeY = (z) => 3.35 + (1 - z / 4.4) * 1.75;
+  const baseZ = 3.5;
+  const W = 3.2, H = 0.8;
+  const lift = 0.3; // post height above the tiles
+  g.position.set(0, slopeY(baseZ) + lift + H / 2, baseZ);
+  g.rotation.x = -0.08;
   // Carved frame: four rails with slightly flared corners
   const frameM = new THREE.MeshStandardMaterial({ map: woodTexture([1, 1], '#5a3620', '#3a2213'), roughness: 0.45 });
   const t = 0.1;
@@ -158,8 +163,14 @@ function nameBoard() {
   g.add(boardMesh);
   // Backing
   box(W, H, 0.04, M.woodDark, 0, 0, -0.02, g);
-  // Brass hanging rods up to the fascia
-  for (const x of [-1.1, 1.1]) box(0.025, 0.42, 0.025, M.copper, x, H / 2 + t + 0.24, 0, g);
+  // Timber posts and diagonal back braces down to the tiles
+  const postLen = lift + H / 2 + 0.25;
+  for (const x of [-1.2, 1.2]) {
+    box(0.09, postLen, 0.09, frameM, x, -H / 2 - lift / 2 + 0.05, -0.08, g);
+    const brace = box(0.06, 0.9, 0.06, frameM, x, -H / 2 - 0.1, -0.45, g);
+    brace.rotation.x = 0.75;
+    box(0.2, 0.05, 0.2, M.roofTile, x, -H / 2 - lift - 0.04, -0.08, g);
+  }
   // Two small gooseneck lamps above the board
   for (const x of [-0.9, 0.9]) {
     const arm = box(0.02, 0.02, 0.3, M.black, x, H / 2 + 0.28, 0.16, g);
@@ -170,10 +181,7 @@ function nameBoard() {
     g.add(shade);
     const bulb = sphere(0.025, M.warmLamp, x, H / 2 + 0.22, 0.33, g);
     bulb.castShadow = false;
-    const l = new THREE.SpotLight('#ffcf94', 3, 3, 0.9, 0.5, 1.5);
-    l.position.set(x, H / 2 + 0.22, 0.34);
-    l.target.position.set(x * 0.6, -0.1, 0);
-    g.add(l, l.target);
+
   }
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   boardMesh.castShadow = false;
@@ -437,6 +445,7 @@ function stools() {
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.012;
     g.add(ring);
+    g.userData.noMerge = true;
     root.add(g);
     out.push({ group: g, hit, ring, seat });
   });
@@ -591,9 +600,6 @@ function forecourt() {
     cap.position.y = 1.31; cap.rotation.y = Math.PI / 4; cap.castShadow = true;
     g.add(cap);
     sphere(0.06, M.stone, 0, 1.46, 0, g);
-    const l = new THREE.PointLight('#ffc27a', 1.4, 3.5, 2);
-    l.position.set(0, 1.05, 0);
-    g.add(l);
     root.add(g);
   }
   // Low wall with a tiled coping along the far left, framing the garden
@@ -656,6 +662,7 @@ export function buildWorld(scene) {
   binRing.rotation.x = -Math.PI / 2;
   binRing.position.y = 0.012;
   bin.add(binRing);
+  bin.userData.noMerge = true;
   root.add(bin);
 
   return { root, stools: stoolObjs, lights, materials: M, bin: { group: bin, hit: binHit, ring: binRing } };
@@ -685,6 +692,7 @@ function stoolAt(x, z, index, parent, opts = {}) {
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = (opts.y ?? 0) + 0.012;
   g.add(ring);
+  g.userData.noMerge = true;
   parent.add(g);
   return { group: g, hit, ring };
 }
@@ -857,6 +865,7 @@ function addNightLanterns(world, parent) {
 export function buildLevelArea(world, level) {
   const g = new THREE.Group();
   g.name = `level-${level}`;
+  g.userData.mergeBucket = true;
   root.add(g);
   if (level === 2) { stringLights(world, g); addCourtyardTable(world, -0.1, 3.2, '뜰', g, 2); }
   else if (level === 3) addDeck(world, g);

@@ -1,12 +1,17 @@
 import * as THREE from 'three';
 import { toonGradient } from './textures.js';
+import { mergeStatic } from './optimize.js';
 
 let gradient;
 const outlineMat = new THREE.MeshBasicMaterial({ color: '#221c18', side: THREE.BackSide });
 
+// Shared per colour so every character's parts can merge into a few draw calls.
+const toonCache = new Map();
 function toon(color) {
   if (!gradient) gradient = toonGradient();
-  return new THREE.MeshToonMaterial({ color, gradientMap: gradient });
+  let m = toonCache.get(color);
+  if (!m) toonCache.set(color, (m = new THREE.MeshToonMaterial({ color, gradientMap: gradient })));
+  return m;
 }
 
 function part(geo, mat, x, y, z, parent, outline = 0.02) {
@@ -191,6 +196,14 @@ export function makeCharacter(opts = {}) {
   const hold = new THREE.Group();
   hold.position.set(0, 0.95, 0.36);
   body.add(hold);
+
+  // Merge each rigid part (torso, head, each arm) into a few meshes; legs and the
+  // plate anchor stay separate because they move on their own.
+  for (const o of [head, armL, armR, legL, legR, hold]) o.userData.noMerge = true;
+  mergeStatic(body);
+  mergeStatic(head);
+  mergeStatic(armL);
+  mergeStatic(armR);
 
   const rig = { group: g, body, head, armL, armR, legL, legR, hold, mouth, t: Math.random() * 10, walking: false, sitting: false, carrying: false };
 

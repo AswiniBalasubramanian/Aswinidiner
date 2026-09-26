@@ -4,10 +4,11 @@ import { buildWorld } from './world.js';
 import { Game } from './game.js';
 import { hud } from './ui.js';
 import { LofiPlayer } from './audio.js';
+import { mergeStatic } from './optimize.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -84,17 +85,12 @@ function nightLight(color, intensity, distance, x, y, z, spot) {
   nightLights.push(l);
 }
 // Downlights under the front eave washing the counter and floor
-for (const x of [-4.5, -2.0, 0.5, 3.0, 5.2]) nightLight('#ffc98a', 22, 9, x, 3.1, 0.9, { dz: -0.4 });
+for (const x of [-3.6, 0.2, 4.0]) nightLight('#ffc98a', 30, 10, x, 3.1, 0.9, { dz: -0.4 });
 // Kitchen glow behind the bar
-nightLight('#ffd6a0', 14, 8, -1.8, 2.4, -3.3);
-nightLight('#ffd6a0', 10, 7, 2.6, 2.4, -3.3);
-// Courtyard: warm fill over the garden, tables and the path
-nightLight('#ffb870', 10, 9, -3.6, 2.2, 3.6);
-nightLight('#ffb870', 10, 9, 2.6, 2.2, 4.0);
-nightLight('#ffcf94', 8, 9, 1.8, 1.4, 7.2);
-// Uplight on the potted tree and the entrance
-nightLight('#ffd9a8', 6, 4, 4.9, 0.4, 1.4);
-nightLight('#ffc27a', 8, 7, 6.6, 2.4, 2.8);
+nightLight('#ffd6a0', 18, 9, 0.2, 2.4, -3.3);
+// Courtyard: warm fill over the garden, tables, path and entrance
+nightLight('#ffb870', 14, 11, -2.6, 2.4, 4.4);
+nightLight('#ffc27a', 14, 11, 4.2, 2.4, 4.2);
 // Cool moon fill so silhouettes still read
 const moon = new THREE.DirectionalLight('#9fb4e0', 0);
 moon.position.set(6, 12, 10);
@@ -105,7 +101,7 @@ const game = new Game(scene, world);
 
 // Camera framing per level — pulls back and pans so newly unlocked areas are in view.
 const VIEWS = {
-  1: { pos: [5.6, 4.4, 11.6], target: [0.5, 1.15, -0.3] },
+  1: { pos: [5.6, 4.6, 11.6], target: [0.5, 1.45, -0.3] },
   2: { pos: [5.2, 4.8, 13.2], target: [0.3, 1.0, 0.5] },
   3: { pos: [8.0, 5.2, 13.8], target: [2.0, 1.0, 0.7] },
   4: { pos: [2.6, 5.8, 15.6], target: [-0.8, 1.0, 1.2] },
@@ -216,7 +212,8 @@ const startMusic = () => { if (musicWanted && !music.playing) music.play().then(
 hud.start.addEventListener('click', startMusic);
 hud.marketDone.addEventListener('click', startMusic);
 reflectMusic();
-game.onSceneChange = () => collectEmissives();
+game.onSceneChange = () => { mergeStatic(world.root); collectEmissives(); };
+mergeStatic(world.root);
 collectEmissives();
 
 // Picking
@@ -266,15 +263,14 @@ window.addEventListener('resize', () => {
 // Loop
 const clock = new THREE.Clock();
 let flickerT = 0;
-let lastTick = performance.now();
+let lastRaf = performance.now();
 function tick() {
-  lastTick = performance.now();
   const dt = Math.min(clock.getDelta(), 0.12);
   flickerT += dt;
   nightMix += (nightTarget - nightMix) * Math.min(1, dt * 1.6);
   if (Math.abs(nightTarget - nightMix) < 0.002) nightMix = nightTarget;
   applyLighting();
-  for (const l of nightLights) l.intensity = l.userData.nightBase * nightMix;
+  for (const l of nightLights) { l.intensity = l.userData.nightBase * nightMix; l.visible = nightMix > 0.001; }
   const lampScale = THREE.MathUtils.lerp(DAY.lamp, NIGHT.lamp, nightMix);
   world.lights.forEach((l, i) => { l.userData.base ??= l.intensity; l.intensity = l.userData.base * lampScale + Math.sin(flickerT * 3.1 + i * 1.7) * 0.18 + Math.sin(flickerT * 7.3 + i) * 0.08; });
   game.update(dt);
@@ -283,9 +279,10 @@ function tick() {
   renderer.render(scene, camera);
 }
 function frame() {
+  lastRaf = performance.now();
   tick();
   requestAnimationFrame(frame);
 }
 frame();
 // Keep the simulation moving when rAF is throttled (background tab / embedded pane)
-setInterval(() => { if (performance.now() - lastTick > 90) tick(); }, 50);
+setInterval(() => { if (performance.now() - lastRaf > 500) tick(); }, 50);
