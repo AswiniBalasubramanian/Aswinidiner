@@ -21,7 +21,7 @@ scene.fog = new THREE.Fog('#d8d3cb', 22, 60);
 
 // Day / night lighting rig. Every value is lerped by nightMix each frame.
 const DAY = { bg: new THREE.Color('#d8d3cb'), hemiSky: new THREE.Color('#eae4da'), hemiGround: new THREE.Color('#8c7a67'), hemi: 1.4, ambient: 0.35, sun: 2.8, sunColor: new THREE.Color('#ffe7c9'), rim: 0.6, exposure: 1.0, lamp: 1.0, emissive: 1.0, fogNear: 22, fogFar: 60 };
-const NIGHT = { bg: new THREE.Color('#1c1d26'), hemiSky: new THREE.Color('#3a4157'), hemiGround: new THREE.Color('#1f1a17'), hemi: 0.55, ambient: 0.08, sun: 0.25, sunColor: new THREE.Color('#8fa3d1'), rim: 0.25, exposure: 0.95, lamp: 2.4, emissive: 2.6, fogNear: 14, fogFar: 42 };
+const NIGHT = { bg: new THREE.Color('#1c1d26'), hemiSky: new THREE.Color('#4a5270'), hemiGround: new THREE.Color('#2a221c'), hemi: 0.75, ambient: 0.14, sun: 0.35, sunColor: new THREE.Color('#8fa3d1'), rim: 0.35, exposure: 1.08, lamp: 3.4, emissive: 3.2, fogNear: 16, fogFar: 48 };
 let nightMix = 0, nightTarget = 0;
 const tmpColor = new THREE.Color();
 
@@ -65,6 +65,42 @@ scene.add(rim);
 const ambient = scene.children.find((o) => o.isAmbientLight);
 
 const world = buildWorld(scene);
+
+// Night-only lights: fade in with nightMix so the diner glows after dark.
+const nightLights = [];
+function nightLight(color, intensity, distance, x, y, z, spot) {
+  let l;
+  if (spot) {
+    l = new THREE.SpotLight(color, intensity, distance, 0.9, 0.6, 1.6);
+    l.target.position.set(x, 0, z + (spot.dz || 0));
+    scene.add(l.target);
+  } else {
+    l = new THREE.PointLight(color, intensity, distance, 2);
+  }
+  l.position.set(x, y, z);
+  l.userData.nightBase = intensity;
+  l.intensity = 0;
+  scene.add(l);
+  nightLights.push(l);
+}
+// Downlights under the front eave washing the counter and floor
+for (const x of [-4.5, -2.0, 0.5, 3.0, 5.2]) nightLight('#ffc98a', 22, 9, x, 3.1, 0.9, { dz: -0.4 });
+// Kitchen glow behind the bar
+nightLight('#ffd6a0', 14, 8, -1.8, 2.4, -3.3);
+nightLight('#ffd6a0', 10, 7, 2.6, 2.4, -3.3);
+// Courtyard: warm fill over the garden, tables and the path
+nightLight('#ffb870', 10, 9, -3.6, 2.2, 3.6);
+nightLight('#ffb870', 10, 9, 2.6, 2.2, 4.0);
+nightLight('#ffcf94', 8, 9, 1.8, 1.4, 7.2);
+// Uplight on the potted tree and the entrance
+nightLight('#ffd9a8', 6, 4, 4.9, 0.4, 1.4);
+nightLight('#ffc27a', 8, 7, 6.6, 2.4, 2.8);
+// Cool moon fill so silhouettes still read
+const moon = new THREE.DirectionalLight('#9fb4e0', 0);
+moon.position.set(6, 12, 10);
+moon.userData.nightBase = 0.6;
+scene.add(moon);
+nightLights.push(moon);
 const game = new Game(scene, world);
 
 // Camera framing per level — pulls back and pans so newly unlocked areas are in view.
@@ -158,7 +194,7 @@ let musicWanted = true;
 try { musicWanted = localStorage.getItem('aswini-diner-music') !== '0'; } catch { /* ignore */ }
 function reflectMusic() {
   musicBtn.setAttribute('aria-pressed', String(music.playing));
-  musicBtn.textContent = music.playing ? 'Music on' : 'Music off';
+  musicBtn.textContent = music.playing ? '♪ On' : '♪ Off';
 }
 musicBtn.addEventListener('click', () => {
   music.toggle();
@@ -227,6 +263,7 @@ function tick() {
   nightMix += (nightTarget - nightMix) * Math.min(1, dt * 1.6);
   if (Math.abs(nightTarget - nightMix) < 0.002) nightMix = nightTarget;
   applyLighting();
+  for (const l of nightLights) l.intensity = l.userData.nightBase * nightMix;
   const lampScale = THREE.MathUtils.lerp(DAY.lamp, NIGHT.lamp, nightMix);
   world.lights.forEach((l, i) => { l.userData.base ??= l.intensity; l.intensity = l.userData.base * lampScale + Math.sin(flickerT * 3.1 + i * 1.7) * 0.18 + Math.sin(flickerT * 7.3 + i) * 0.08; });
   game.update(dt);

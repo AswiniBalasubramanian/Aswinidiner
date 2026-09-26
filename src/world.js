@@ -76,9 +76,120 @@ function sphere(r, mat, x = 0, y = 0, z = 0, parent) {
 
 let root;
 let signMesh;
+let boardMesh;
+
+// Lacquered name-board face: gold serif name, thin inset rule, small red seal.
+function boardTexture(text) {
+  const w = 1536, h = 384;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#2a1f19'); bg.addColorStop(0.5, '#1c1512'); bg.addColorStop(1, '#130e0c');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+  // Subtle lacquer grain
+  ctx.globalAlpha = 0.06;
+  for (let i = 0; i < 70; i++) {
+    ctx.strokeStyle = i % 2 ? '#000' : '#6b4a33';
+    ctx.beginPath();
+    const y = Math.random() * h;
+    ctx.moveTo(0, y);
+    ctx.bezierCurveTo(w * 0.3, y + 6, w * 0.7, y - 6, w, y + 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // Inset gold rule
+  ctx.strokeStyle = '#b8914e';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(34, 34, w - 68, h - 68);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(46, 46, w - 92, h - 92);
+  // Name in gold with a soft emboss
+  const gold = ctx.createLinearGradient(0, h * 0.25, 0, h * 0.75);
+  gold.addColorStop(0, '#f3dca2'); gold.addColorStop(0.5, '#d4ac5f'); gold.addColorStop(1, '#a37a3a');
+  let size = 150;
+  ctx.font = `700 ${size}px "Noto Serif KR", serif`;
+  while (ctx.measureText(text).width > w - 360 && size > 60) { size -= 6; ctx.font = `700 ${size}px "Noto Serif KR", serif`; }
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillText(text, w / 2 + 3, h / 2 + 6);
+  ctx.fillStyle = gold;
+  ctx.fillText(text, w / 2, h / 2 + 2);
+  // Small diamond ornaments either side
+  ctx.fillStyle = '#b8914e';
+  for (const x of [110, w - 110]) {
+    ctx.beginPath(); ctx.moveTo(x, h / 2 - 16); ctx.lineTo(x + 16, h / 2); ctx.lineTo(x, h / 2 + 16); ctx.lineTo(x - 16, h / 2); ctx.closePath(); ctx.fill();
+  }
+  // Red seal stamp, bottom right
+  ctx.fillStyle = '#a8321f';
+  ctx.fillRect(w - 190, h - 132, 64, 64);
+  ctx.fillStyle = '#f1dcc0';
+  ctx.font = '700 34px "Noto Serif KR", serif';
+  ctx.fillText('食', w - 158, h - 98);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+// Hanging name board (hyeonpan) centred under the front eave.
+function nameBoard() {
+  const g = new THREE.Group();
+  g.position.set(-0.6, 2.9, 4.36);
+  const W = 2.5, H = 0.6;
+  // Carved frame: four rails with slightly flared corners
+  const frameM = new THREE.MeshStandardMaterial({ map: woodTexture([1, 1], '#5a3620', '#3a2213'), roughness: 0.45 });
+  const t = 0.1;
+  box(W + t * 2, t, 0.1, frameM, 0, H / 2 + t / 2, 0, g);
+  box(W + t * 2, t, 0.1, frameM, 0, -H / 2 - t / 2, 0, g);
+  box(t, H, 0.1, frameM, -W / 2 - t / 2, 0, 0, g);
+  box(t, H, 0.1, frameM, W / 2 + t / 2, 0, 0, g);
+  for (const [x, y] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+    const c = box(0.2, 0.2, 0.13, frameM, x * (W / 2 + t / 2), y * (H / 2 + t / 2), 0, g);
+    c.rotation.z = Math.PI / 4;
+  }
+  // Top cap moulding
+  box(W + 0.5, 0.06, 0.16, frameM, 0, H / 2 + t + 0.03, 0.01, g);
+  // Face panel
+  boardMesh = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.1, emissive: '#ffffff', emissiveIntensity: 0.0 }));
+  boardMesh.position.z = 0.03;
+  g.add(boardMesh);
+  // Backing
+  box(W, H, 0.04, M.woodDark, 0, 0, -0.02, g);
+  // Brass hanging rods up to the fascia
+  for (const x of [-1.1, 1.1]) box(0.025, 0.42, 0.025, M.copper, x, H / 2 + t + 0.24, 0, g);
+  // Two small gooseneck lamps above the board
+  for (const x of [-0.9, 0.9]) {
+    const arm = box(0.02, 0.02, 0.3, M.black, x, H / 2 + 0.28, 0.16, g);
+    arm.castShadow = false;
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.08, 16, 1, true), M.lampShade);
+    shade.position.set(x, H / 2 + 0.24, 0.32);
+    shade.rotation.x = -0.6;
+    g.add(shade);
+    const bulb = sphere(0.025, M.warmLamp, x, H / 2 + 0.22, 0.33, g);
+    bulb.castShadow = false;
+    const l = new THREE.SpotLight('#ffcf94', 3, 3, 0.9, 0.5, 1.5);
+    l.position.set(x, H / 2 + 0.22, 0.34);
+    l.target.position.set(x * 0.6, -0.1, 0);
+    g.add(l, l.target);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  boardMesh.castShadow = false;
+  root.add(g);
+}
 
 // Wall sign text (the diner's name, set by the player).
 export function setSignText(text) {
+  if (boardMesh) {
+    const prev = boardMesh.material.map;
+    boardMesh.material.map = boardTexture(text);
+    boardMesh.material.emissiveMap = boardMesh.material.map;
+    boardMesh.material.emissiveIntensity = 0.12;
+    boardMesh.material.needsUpdate = true;
+    if (prev) prev.dispose();
+  }
   if (!signMesh) return;
   const old = signMesh.material.map;
   signMesh.material.map = labelTexture(text, { w: 768, h: 192, fg: '#efe4cf', font: '700 80px "Noto Serif KR", serif' });
@@ -434,6 +545,69 @@ function ground() {
   pave.position.set(0, -0.32, 9);
   pave.receiveShadow = true;
   root.add(pave);
+  forecourt();
+}
+
+// Front courtyard: steps up to the platform, gravel bed with stepping stones,
+// stone lanterns, a low tiled wall and small plantings.
+function forecourt() {
+  const gravelM = new THREE.MeshStandardMaterial({ color: '#cfc6b6', roughness: 1 });
+  const stepM = new THREE.MeshStandardMaterial({ color: '#b3a893', roughness: 0.9 });
+  const mossM = new THREE.MeshStandardMaterial({ color: '#6e8a4e', roughness: 1 });
+  // Granite steps along the platform front (the slab edge sits at z≈5.45)
+  box(9.0, 0.11, 0.42, stepM, 0.6, -0.27, 5.66);
+  box(9.0, 0.11, 0.42, stepM, 0.6, -0.16, 5.45 - 0.0);
+  // Gravel bed with raked lines
+  const gravel = box(12.5, 0.02, 3.4, gravelM, -0.4, -0.31, 7.7);
+  gravel.castShadow = false;
+  for (let i = 0; i < 9; i++) {
+    const rake = box(12.2, 0.012, 0.03, new THREE.MeshStandardMaterial({ color: '#bdb3a1', roughness: 1 }), -0.4, -0.295, 6.3 + i * 0.34);
+    rake.castShadow = false;
+  }
+  // Stepping stones leading to the entrance
+  let seed = 11;
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let i = 0; i < 7; i++) {
+    const s = cyl(0.3 + rnd() * 0.08, 0.34 + rnd() * 0.08, 0.08, stepM, 1.2 + i * 0.75, -0.28, 6.4 + Math.sin(i * 0.9) * 0.35 + i * 0.15, 9);
+    s.rotation.y = rnd() * 3;
+    s.scale.z = 0.8;
+  }
+  // Moss tufts around the stones
+  for (let i = 0; i < 26; i++) {
+    const m = sphere(0.06 + rnd() * 0.05, mossM, -6 + rnd() * 12, -0.29, 6.2 + rnd() * 3);
+    m.scale.y = 0.35;
+  }
+  // Stone lanterns (seokdeung) flanking the path
+  for (const [x, z] of [[-2.2, 7.1], [5.6, 6.6]]) {
+    const g = new THREE.Group();
+    g.position.set(x, -0.3, z);
+    box(0.5, 0.12, 0.5, M.stone, 0, 0.06, 0, g);
+    cyl(0.1, 0.12, 0.7, M.stone, 0, 0.47, 0, 8, g);
+    box(0.44, 0.08, 0.44, M.stone, 0, 0.86, 0, g);
+    box(0.34, 0.3, 0.34, M.stone, 0, 1.05, 0, g);
+    const glow = box(0.2, 0.18, 0.36, M.warmLamp, 0, 1.05, 0, g);
+    glow.castShadow = false;
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.22, 4), M.stone);
+    cap.position.y = 1.31; cap.rotation.y = Math.PI / 4; cap.castShadow = true;
+    g.add(cap);
+    sphere(0.06, M.stone, 0, 1.46, 0, g);
+    const l = new THREE.PointLight('#ffc27a', 1.4, 3.5, 2);
+    l.position.set(0, 1.05, 0);
+    g.add(l);
+    root.add(g);
+  }
+  // Low wall with a tiled coping along the far left, framing the garden
+  const wallM = new THREE.MeshStandardMaterial({ color: '#e3dccf', roughness: 0.95 });
+  box(0.3, 0.9, 5.2, wallM, -9.2, 0.13, 2.4);
+  box(0.5, 0.12, 5.4, M.roofTile, -9.2, 0.64, 2.4);
+  for (let i = 0; i < 16; i++) cyl(0.05, 0.05, 0.5, M.roofTile, -9.2, 0.72, 0.0 + i * 0.33, 8).rotation.z = Math.PI / 2;
+  // Low shrubs along the front edge
+  for (const [x, z] of [[-5.5, 6.0], [-4.6, 6.2], [3.6, 6.1], [7.4, 6.4], [8.2, 5.8]]) {
+    for (let k = 0; k < 5; k++) {
+      const b = sphere(0.18 + rnd() * 0.12, rnd() > 0.5 ? M.leaf : M.leafLight, x + (rnd() - 0.5) * 0.5, -0.12 + rnd() * 0.15, z + (rnd() - 0.5) * 0.4);
+      b.scale.y = 0.75;
+    }
+  }
 }
 
 export function buildWorld(scene) {
@@ -450,12 +624,39 @@ export function buildWorld(scene) {
   garden();
 
   // Wall sign
+  nameBoard();
   signMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ transparent: true }));
   signMesh.position.set(4.2, 2.3, -4.13);
   root.add(signMesh);
   setSignText('아스위니 다이너');
   const plaque = box(0.22, 0.42, 0.04, M.red, 6.0, 1.8, 1.42);
   plaque.name = 'plaque';
+
+  // Noren curtain panels under the front beam
+  const norenM = new THREE.MeshStandardMaterial({ color: '#2f3d4f', roughness: 0.95, side: THREE.DoubleSide });
+  const rod = box(4.4, 0.04, 0.04, M.woodDark, -1.4, 3.1, 1.28);
+  rod.castShadow = false;
+  for (let i = 0; i < 5; i++) {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.62, 1, 6), norenM);
+    const pos = p.geometry.attributes.position;
+    for (let v = 0; v < pos.count; v++) pos.setZ(v, Math.sin(pos.getY(v) * 6 + i) * 0.015);
+    p.geometry.computeVertexNormals();
+    p.position.set(-3.1 + i * 0.86, 2.78, 1.3);
+    p.castShadow = true;
+    root.add(p);
+  }
+  const norenLbl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: labelTexture('식당 · 밥집', { w: 512, h: 128, fg: '#efe4cf', font: '700 64px "Noto Serif KR", serif' }), transparent: true }));
+  norenLbl.position.set(-1.4, 2.8, 1.32);
+  root.add(norenLbl);
+
+  // Wooden menu boards on the back wall
+  const menuItems = ['비빔밥 9,000', '라면 6,000', '김밥 5,000', '떡볶이 7,000'];
+  menuItems.forEach((t, i) => {
+    box(0.66, 0.2, 0.03, M.woodLight, -4.6 + i * 0.72, 1.92, -4.13);
+    const lbl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.17), new THREE.MeshBasicMaterial({ map: labelTexture(t, { w: 384, h: 104, fg: '#2a1c12', font: '700 50px "Noto Serif KR", serif' }), transparent: true }));
+    lbl.position.set(-4.6 + i * 0.72, 1.92, -4.11);
+    root.add(lbl);
+  });
 
   // Dustbin beside the pass — click it while carrying to dump a plate
   const binMat = new THREE.MeshStandardMaterial({ color: '#3a3f44', roughness: 0.5, metalness: 0.5 });

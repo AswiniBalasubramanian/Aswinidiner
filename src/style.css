@@ -24,10 +24,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #d8d3cb; fon
 .brand-en { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-2); }
 
 .stats { display: flex; gap: 0; background: var(--paper-2); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.stat { display: flex; flex-direction: column; gap: 4px; padding: 12px 20px; min-width: 96px; border-left: 1px solid var(--line); }
+.stat { display: flex; flex-direction: column; gap: 4px; padding: 10px 16px; min-width: 0; border-left: 1px solid var(--line); white-space: nowrap; }
 .stat:first-child { border-left: 0; }
 .stat .label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); }
-.stat .value { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .value { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .tickets { position: absolute; right: 36px; top: 110px; display: flex; flex-direction: column; gap: 8px; width: 230px; }
 .ticket { background: var(--paper-2); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; font-size: 13px; animation: rise 0.35s ease both; }
@@ -63,7 +63,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #d8d3cb; fon
 button.ghost { appearance: none; background: transparent; border: 1px solid var(--line); color: var(--ink); font: 500 14px var(--font); padding: 13px 22px; border-radius: 999px; cursor: pointer; transition: background 0.15s; }
 button.ghost:hover { background: rgba(27,23,19,0.05); }
 button[hidden] { display: none !important; }
-.stat-target { min-width: 150px; }
+.stat-target { min-width: 120px; }
 .tbar { display: block; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 2px; }
 .tbar i { display: block; height: 100%; width: 0; background: var(--seat); transition: width 0.3s; }
 .stat .value.met { color: var(--seat); }
@@ -89,8 +89,19 @@ button[hidden] { display: none !important; }
 .unlock .pips i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
 .unlock .pips i.on { background: var(--seat); }
 
-.top-right { display: flex; align-items: flex-start; gap: 10px; }
-.chip-btn { pointer-events: auto; appearance: none; border: 1px solid var(--line); background: var(--paper-2); backdrop-filter: blur(10px); color: var(--ink); font: 500 12px var(--font); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 18px; height: 47px; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
+.top-right { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.hud-top { gap: 12px; }
+.brand-kr { white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.chip-btn { white-space: nowrap; }
+@media (max-width: 1280px) {
+  .stat { padding: 9px 12px; }
+  .stat .label { letter-spacing: 0.12em; }
+  .stat .value { font-size: 15px; }
+  .chip-btn { padding: 0 12px; font-size: 11px; height: 43px; }
+  .brand-kr { font-size: 19px; }
+}
+@media (max-width: 1100px) { .hud-top { flex-wrap: wrap; } .top-right { flex-wrap: wrap; justify-content: flex-end; } }
+.chip-btn { pointer-events: auto; appearance: none; border: 1px solid var(--line); background: var(--paper-2); backdrop-filter: blur(10px); color: var(--ink); font: 500 12px var(--font); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 16px; height: 49px; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
 .chip-btn:hover { background: var(--paper); }
 .chip-btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 body.night { --paper-2: rgba(38, 33, 29, 0.78); --paper: #2b2622; --ink: #f1e9dc; --ink-2: #b8ada0; --line: rgba(241, 233, 220, 0.14); background: #1b1a1f; }

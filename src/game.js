@@ -78,9 +78,10 @@ export class Game {
     this.seats = LAYOUT.stools.map(() => null);
     this.applyUpgrades();
     this.applyName();
+    document.fonts?.ready.then(() => this.applyName());
 
     // Chef
-    this.chef = makeCharacter({ hair: '#1f1a17', top: '#c94a3a', bottom: '#2c2a33', apron: '#f4efe6', hairStyle: 'bun', skin: '#f3d4b6' });
+    this.chef = makeCharacter({ hair: '#1f1a17', top: '#c94a3a', bottom: '#2c2a33', apron: '#f4efe6', hairStyle: 'short', hat: 'chef', collar: '#f4efe6', skin: '#f3d4b6' });
     this.chef.group.position.copy(LAYOUT.chefHome);
     faceDir(this.chef, 0, 1);
     scene.add(this.chef.group);
