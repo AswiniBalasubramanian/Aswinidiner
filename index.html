@@ -3,14 +3,91 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jeju Dining</title>
+    <title>Jeju Dining — a 3D Korean restaurant cooking and serving game</title>
+    <meta name="description" content="Jeju Dining is a free browser game set in a 3D Korean hanok diner. Seat guests, take orders, let the chef cook bibimbap, ramyeon, kimbap and tteokbokki, and serve before patience runs out. Grow the diner across five levels." />
+    <link rel="canonical" href="https://aswinidinergame.vercel.app/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#1f1915" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Jeju Dining" />
+    <meta property="og:title" content="Jeju Dining — 3D Korean restaurant game" />
+    <meta property="og:description" content="Run a small hanok diner: seat guests, cook Korean dishes and serve them before patience runs out. Five levels, day and night, lofi music. Free in the browser." />
+    <meta property="og:url" content="https://aswinidinergame.vercel.app/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Jeju Dining — 3D Korean restaurant game" />
+    <meta name="twitter:description" content="Seat guests, cook Korean dishes, serve before patience runs out. Free browser game." />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM summary" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "VideoGame",
+          "@id": "https://aswinidinergame.vercel.app/#game",
+          "name": "Jeju Dining",
+          "alternateName": "제주 다이닝",
+          "url": "https://aswinidinergame.vercel.app/",
+          "description": "A free 3D restaurant management game in the browser. You run a traditional Korean hanok diner: seat guests at the counter, take their orders, let the chef cook, and serve each plate before the guest's patience runs out.",
+          "genre": ["Time management", "Restaurant simulation", "Casual"],
+          "gamePlatform": ["Web browser"],
+          "applicationCategory": "Game",
+          "operatingSystem": "Any (modern web browser with WebGL)",
+          "playMode": "SinglePlayer",
+          "numberOfPlayers": { "@type": "QuantitativeValue", "value": 1 },
+          "inLanguage": ["en", "ko"],
+          "isAccessibleForFree": true,
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "author": { "@type": "Person", "name": "Aswini Balasubramanian" },
+          "gameItem": ["Bibimbap", "Ramyeon", "Kimbap", "Tteokbokki", "Bulgogi"]
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "What is Jeju Dining?", "acceptedAnswer": { "@type": "Answer", "text": "Jeju Dining is a free 3D browser game where you run a small Korean hanok restaurant: seat guests, take orders, have the chef cook Korean dishes, and serve them before patience runs out." } },
+            { "@type": "Question", "name": "How do you play Jeju Dining?", "acceptedAnswer": { "@type": "Answer", "text": "Click an empty stool to seat a waiting guest, click the guest to take their order, then click the finished plate on the pass and the guest it belongs to. Each service lasts three minutes." } },
+            { "@type": "Question", "name": "How many levels does Jeju Dining have?", "acceptedAnswer": { "@type": "Answer", "text": "Five. Each level has a higher daily sales target (from ₩20,000 to ₩110,000) and opens a new part of the restaurant: the counter, the courtyard, a pergola deck, a raised pyeongsang platform and a night market." } },
+            { "@type": "Question", "name": "Is Jeju Dining free, and does it need a download?", "acceptedAnswer": { "@type": "Answer", "text": "It is free and runs directly in a modern web browser with WebGL. No download or account is needed; progress is saved in the browser." } },
+            { "@type": "Question", "name": "What dishes can you serve?", "acceptedAnswer": { "@type": "Answer", "text": "Bibimbap, ramyeon, kimbap and tteokbokki, plus bulgogi once you buy it in the market." } }
+          ]
+        }
+      ]
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <canvas id="scene"></canvas>
+    <canvas id="scene" aria-label="3D view of the Jeju Dining restaurant"></canvas>
+
+    <main class="sr-only" id="about">
+      <h1>Jeju Dining — a 3D Korean restaurant game</h1>
+      <p>Jeju Dining (제주 다이닝) is a free time-management game you play in the browser. You run a small traditional Korean hanok diner with a red-brick kitchen, a tiled roof and a garden courtyard, working alongside a chef while guests arrive at the door.</p>
+      <h2>How to play</h2>
+      <ol>
+        <li>Seat: click an empty stool while a guest is waiting at the entrance.</li>
+        <li>Order: click the seated guest once they have chosen a dish.</li>
+        <li>Cook: the chef cooks the order at the stove and puts the plate on the pass.</li>
+        <li>Serve: click the finished plate, then the guest it belongs to, before their patience runs out.</li>
+        <li>Guests who are served quickly leave a tip. Each service lasts three minutes.</li>
+      </ol>
+      <h2>Levels</h2>
+      <ul>
+        <li>Level 1, The counter — daily target ₩20,000.</li>
+        <li>Level 2, The courtyard — string lights and a garden table; target ₩35,000.</li>
+        <li>Level 3, The deck — a timber deck under a vine pergola; target ₩55,000.</li>
+        <li>Level 4, The pyeongsang — a raised wooden platform with floor cushions; target ₩80,000.</li>
+        <li>Level 5, Night market — red lanterns and a third courtyard table; target ₩110,000.</li>
+      </ul>
+      <h2>Menu</h2>
+      <p>Bibimbap (₩9,000), ramyeon (₩6,000), kimbap (₩5,000) and tteokbokki (₩7,000), with bulgogi (₩12,000) unlocked in the market.</p>
+      <h2>Market upgrades</h2>
+      <p>Spend what you earn on a courtyard table, a twin-burner stove, warm lanterns, a street signboard and a bulgogi menu.</p>
+      <h2>Features</h2>
+      <p>Day and night lighting, procedural lofi music, a level board to replay any level you have reached, and a diner you can name yourself. Progress is saved in your browser; no account or download needed.</p>
+    </main>
+    <noscript><p>Jeju Dining is a 3D browser game and needs JavaScript and WebGL enabled to play.</p></noscript>
 
     <div id="hud">
       <header class="hud-top">

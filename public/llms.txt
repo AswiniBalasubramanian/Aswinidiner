@@ -1,0 +1,42 @@
+# Jeju Dining
+
+> Jeju Dining (제주 다이닝) is a free 3D restaurant time-management game that runs in the web browser. The player runs a small traditional Korean hanok diner: seat guests, take orders, let the chef cook, and serve each plate before the guest's patience runs out.
+
+- Play: https://aswinidinergame.vercel.app/
+- Platform: any modern web browser with WebGL; no download, no account
+- Price: free
+- Players: single player
+- Languages: English interface, Korean names and signage
+- Built with: Three.js and Vite; all 3D models, textures and music are generated procedurally in code
+- Author: Aswini Balasubramanian
+- Source: https://github.com/AswiniBalasubramanian/Aswinidiner
+
+## How to play
+
+1. Click an empty stool to seat a guest waiting at the entrance.
+2. Click the seated guest to take their order; it goes to the kitchen as a ticket.
+3. The chef cooks it at the stove and places the plate on the pass.
+4. Click the plate, then the guest it belongs to. Fast service earns a tip.
+5. A service lasts three minutes. Holding the wrong plate? Click the dustbin and the chef remakes it.
+
+## Levels and daily targets
+
+- Level 1 — The counter: ₩20,000
+- Level 2 — The courtyard (string lights, garden table): ₩35,000
+- Level 3 — The deck (timber deck under a vine pergola): ₩55,000
+- Level 4 — The pyeongsang (raised wooden platform with cushions): ₩80,000
+- Level 5 — Night market (red lanterns, third courtyard table): ₩110,000
+
+Meeting the target unlocks the next level. Any reached level can be replayed from the level board.
+
+## Menu
+
+Bibimbap ₩9,000 · Ramyeon ₩6,000 · Kimbap ₩5,000 · Tteokbokki ₩7,000 · Bulgogi ₩12,000 (market unlock)
+
+## Market upgrades
+
+Courtyard table (+2 seats), twin-burner stove (30% faster cooking), warm lanterns (guests wait 25% longer), street signboard (more guests), Bulgogi on the menu.
+
+## Other features
+
+Day/night lighting toggle, procedurally generated lofi music, rename your diner, progress saved in the browser.
