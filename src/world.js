@@ -76,6 +76,8 @@ function sphere(r, mat, x = 0, y = 0, z = 0, parent) {
 
 let root;
 let signMesh;
+let roofGroup;
+let ceilingGroup;
 let boardMesh;
 
 // Lacquered name-board face: gold serif name, thin inset rule, small red seal.
@@ -185,7 +187,7 @@ function nameBoard() {
   }
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   boardMesh.castShadow = false;
-  root.add(g);
+  roofGroup.add(g);
 }
 
 // Wall sign text (the diner's name, set by the player).
@@ -322,10 +324,13 @@ function structure() {
   box(12.6, 0.28, 0.28, M.woodDark, 0, H + 0.12, 1.2);
   box(0.28, 0.28, 5.6, M.woodDark, -6.1, H + 0.12, -1.5);
   box(0.28, 0.28, 5.6, M.woodDark, 6.1, H + 0.12, -1.5);
-  // Ceiling (dark timber)
-  const ceil = box(12.4, 0.1, 5.6, M.woodDark, 0, H + 0.3, -1.5);
+  // Ceiling (dark timber) — its own group so the open-roof view can hide it
+  ceilingGroup = new THREE.Group();
+  ceilingGroup.userData.mergeBucket = true;
+  root.add(ceilingGroup);
+  const ceil = box(12.4, 0.1, 5.6, M.woodDark, 0, H + 0.3, -1.5, ceilingGroup);
   ceil.castShadow = false;
-  for (let x = -5.5; x < 6; x += 1.1) box(0.12, 0.18, 5.4, M.woodDark, x, H + 0.2, -1.5);
+  for (let x = -5.5; x < 6; x += 1.1) box(0.12, 0.18, 5.4, M.woodDark, x, H + 0.2, -1.5, ceilingGroup);
 }
 
 function kitchen() {
@@ -625,7 +630,10 @@ export function buildWorld(scene) {
   kitchen();
   bar();
   const stoolObjs = stools();
-  root.add(roof());
+  // Roof (and the name board standing on it) form one liftable group for the open-roof view.
+  roofGroup = roof();
+  roofGroup.userData.mergeBucket = true;
+  root.add(roofGroup);
   const lights = lanterns();
   garden();
 
@@ -665,7 +673,7 @@ export function buildWorld(scene) {
   bin.userData.noMerge = true;
   root.add(bin);
 
-  return { root, stools: stoolObjs, lights, materials: M, bin: { group: bin, hit: binHit, ring: binRing } };
+  return { root, roof: roofGroup, ceiling: ceilingGroup, stools: stoolObjs, lights, materials: M, bin: { group: bin, hit: binHit, ring: binRing } };
 }
 
 

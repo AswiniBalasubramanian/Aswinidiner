@@ -109,6 +109,7 @@ const VIEWS = {
 };
 const camTween = { t: 1, dur: 1.8, fromPos: new THREE.Vector3(), fromTarget: new THREE.Vector3(), toPos: new THREE.Vector3(), toTarget: new THREE.Vector3() };
 let framedLevel = 1;
+let roofOpen = false;
 let userMovedCamera = false;
 function frameLevel(level, instant = false) {
   framedLevel = level;
@@ -120,6 +121,17 @@ function frameLevel(level, instant = false) {
   const aspect = window.innerWidth / window.innerHeight;
   const k = aspect < 1.7 ? Math.pow(1.7 / aspect, 0.6) : 1;
   camTween.toPos.sub(camTween.toTarget).multiplyScalar(k).add(camTween.toTarget);
+  if (roofOpen) {
+    // Swing up to a high three-quarter view looking down into the open building.
+    const off = camTween.toPos.clone().sub(camTween.toTarget);
+    const dist = off.length();
+    const flat = Math.hypot(off.x, off.z);
+    const elev = 0.95; // ~54° above the horizon
+    camTween.toPos.set(off.x / flat * Math.cos(elev) * dist, Math.sin(elev) * dist, off.z / flat * Math.cos(elev) * dist).add(camTween.toTarget);
+    camTween.toTarget.y = 0.6;
+    camTween.toTarget.z -= 0.9;
+    camTween.toPos.z -= 0.9;
+  }
   if (instant) {
     camera.position.copy(camTween.toPos);
     controls.target.copy(camTween.toTarget);
@@ -141,6 +153,36 @@ function updateCamTween(dt) {
 // Any drag/zoom by the player cancels a running tween.
 controls.addEventListener('start', () => { camTween.t = 1; userMovedCamera = true; });
 game.onLevelView = (level) => frameLevel(level);
+
+// Open-roof view: the roof lifts off and fades out of the way, the ceiling hides,
+// and the camera swings up so the whole floor plan is visible while playing.
+const roofBtn = document.getElementById('roof-btn');
+let roofLift = 0;
+function setRoofOpen(on, instant = false) {
+  roofOpen = on;
+  roofBtn.setAttribute('aria-pressed', String(on));
+  roofBtn.setAttribute('aria-label', on ? 'Close the roof' : 'Open the roof');
+  roofBtn.title = on ? 'Roof view' : 'Open roof view';
+  roofBtn.innerHTML = on
+    ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4"/><path d="M5 12v8h14v-8"/><path d="M8 12h8"/><path d="M12 6v3M10 8l2 2 2-2"/></svg>';
+  if (instant) roofLift = on ? 1 : 0;
+  world.ceiling.visible = !on;
+  try { localStorage.setItem('aswini-diner-roof', on ? '1' : '0'); } catch { /* ignore */ }
+  frameLevel(framedLevel, instant);
+}
+function updateRoof(dt) {
+  const target = roofOpen ? 1 : 0;
+  roofLift += (target - roofLift) * Math.min(1, dt * 5);
+  if (Math.abs(target - roofLift) < 0.002) roofLift = target;
+  world.roof.position.y = roofLift * 2.5;
+  world.roof.visible = roofLift < 0.45;
+}
+roofBtn.addEventListener('click', () => setRoofOpen(!roofOpen));
+let savedRoof = false;
+try { savedRoof = localStorage.getItem('aswini-diner-roof') === '1'; } catch { /* ignore */ }
+setRoofOpen(savedRoof, true);
+updateRoof(0);
 frameLevel(game.level, true);
 
 // Emissive bulbs (lanterns, string lights, paper lanterns) brighten at night.
@@ -276,6 +318,7 @@ function tick() {
   world.lights.forEach((l, i) => { l.userData.base ??= l.intensity; l.intensity = l.userData.base * lampScale + Math.sin(flickerT * 3.1 + i * 1.7) * 0.18 + Math.sin(flickerT * 7.3 + i) * 0.08; });
   game.update(dt);
   updateCamTween(dt);
+  updateRoof(dt);
   controls.update();
   renderer.render(scene, camera);
 }
