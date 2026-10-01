@@ -252,6 +252,7 @@ document.getElementById('level-badge').addEventListener('click', () => game.open
 hud.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && hud.nameInput.value.trim()) hud.start.click(); });
 let startedAt = 0;
 window.__game = game;
+game.syncFromCloud();
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;

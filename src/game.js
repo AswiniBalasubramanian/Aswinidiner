@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { LAYOUT, addCourtyardTable, addExtraLanterns, addSignboard, buildLevelArea, setSignText } from './world.js';
 import { makeCharacter, makeDish, DISHES } from './characters.js';
+import { loadCloud, saveCloud } from './cloud.js';
 import { makeBubble, makeProgress, hud, won, toast, renderTickets } from './ui.js';
 
 const SERVICE_SECONDS = 180;
@@ -71,6 +72,7 @@ export class Game {
     this.maxLevel = Math.max(save.maxLevel, save.level);
     this.wallet = save.wallet;
     this.name = save.name === 'Aswini Diner' ? 'Jeju Dining' : save.name;
+    this.savedAt = save.savedAt;
     this.upgrades = new Set(save.upgrades);
     this.applied = new Set();
     this.levelGroups = new Map();
@@ -125,15 +127,43 @@ export class Game {
   load() {
     try {
       const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
-      if (s && typeof s === 'object') return { day: s.day || 1, level: s.level || 1, maxLevel: s.maxLevel || 1, wallet: s.wallet || 0, upgrades: s.upgrades || [], name: s.name || '' };
+      if (s && typeof s === 'object') return { day: s.day || 1, level: s.level || 1, maxLevel: s.maxLevel || 1, wallet: s.wallet || 0, upgrades: s.upgrades || [], name: s.name || '', savedAt: s.savedAt || 0 };
     } catch { /* ignore */ }
-    return { day: 1, level: 1, maxLevel: 1, wallet: 0, upgrades: [], name: '' };
+    return { day: 1, level: 1, maxLevel: 1, wallet: 0, upgrades: [], name: '', savedAt: 0 };
   }
 
   save() {
+    this.savedAt = Date.now();
+    const state = { day: this.day, level: this.level, maxLevel: this.maxLevel, wallet: this.wallet, upgrades: [...this.upgrades], name: this.name, savedAt: this.savedAt };
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ day: this.day, level: this.level, maxLevel: this.maxLevel, wallet: this.wallet, upgrades: [...this.upgrades], name: this.name }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
     } catch { /* ignore */ }
+    saveCloud(state);
+  }
+
+  // Pull the cloud save; if it's newer than this browser's, adopt it (between services only).
+  async syncFromCloud() {
+    const remote = await loadCloud();
+    if (!remote) { if (this.savedAt) this.save(); return; }
+    if ((remote.savedAt || 0) <= (this.savedAt || 0)) { this.save(); return; }
+    if (this.running) return;
+    this.day = remote.day || 1;
+    this.level = remote.level || 1;
+    this.maxLevel = Math.max(remote.maxLevel || 1, this.level);
+    this.wallet = remote.wallet || 0;
+    this.upgrades = new Set(remote.upgrades || []);
+    this.name = remote.name || '';
+    this.savedAt = remote.savedAt;
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ ...remote })); } catch { /* ignore */ }
+    this.applyUpgrades();
+    this.applyName();
+    hud.nameInput.value = this.name;
+    hud.nameLabel.textContent = this.name ? 'Diner name' : 'Name your diner';
+    hud.start.disabled = !this.name;
+    hud.marketOpen.hidden = this.wallet <= 0 && this.upgrades.size === 0;
+    this.onLevelView?.(this.level);
+    this.updateHud();
+    toast('Progress restored');
   }
 
   get levelData() { return LEVELS[Math.min(this.level, LEVELS.length) - 1]; }
