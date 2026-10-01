@@ -136,6 +136,46 @@ function boardTexture(text) {
   return t;
 }
 
+// Underside height of the hip roof at (x, z) — must match roof(): eave 3.35, ridge 5.1,
+// half-depth 4.4, half-width 6.6, ridge half-length 3.2.
+function roofY(x, z) {
+  const front = 3.35 + (1 - Math.abs(z) / 4.4) * 1.75;
+  const hip = 3.35 + ((6.6 - Math.abs(x)) / 3.4) * 1.75;
+  return Math.min(front, hip, 5.1) - 0.04;
+}
+
+// Plastered infill between the tops of the walls/beams and the sloping roof, so the roof
+// sits on the building instead of floating above it. Lives in the roof group so the
+// open-roof view lifts it away together with the roof.
+function roofInfill(parent) {
+  const strip = (x0, z0, x1, z1, bottom, steps = 48) => {
+    const pos = [];
+    for (let i = 0; i < steps; i++) {
+      const a = i / steps, b = (i + 1) / steps;
+      const xa = x0 + (x1 - x0) * a, za = z0 + (z1 - z0) * a;
+      const xb = x0 + (x1 - x0) * b, zb = z0 + (z1 - z0) * b;
+      const ta = Math.max(bottom, roofY(xa, za)), tb = Math.max(bottom, roofY(xb, zb));
+      pos.push(xa, bottom, za, xb, bottom, zb, xb, tb, zb, xa, bottom, za, xb, tb, zb, xa, ta, za);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const uv = [];
+    for (let i = 0; i < pos.length; i += 3) uv.push((pos[i] + pos[i + 2]) / 2, pos[i + 1] / 2);
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, infillM);
+    m.castShadow = m.receiveShadow = true;
+    parent.add(m);
+  };
+  const infillM = new THREE.MeshStandardMaterial({ map: M.plaster.map, color: '#efe9de', roughness: 0.9, side: THREE.DoubleSide });
+  // Front: above the timber lintel over the open counter side
+  strip(-6.3, 1.2, 6.3, 1.2, 3.25);
+  // Back and both sides: above the brick walls
+  strip(-6.3, -4.3, 6.3, -4.3, 3.2);
+  strip(-6.1, -4.3, -6.1, 1.2, 3.2, 24);
+  strip(6.1, -4.3, 6.1, 1.2, 3.2, 24);
+}
+
 // Hanging name board (hyeonpan) centred under the front eave.
 function nameBoard() {
   const g = new THREE.Group();
@@ -633,7 +673,9 @@ export function buildWorld(scene) {
   // Roof (and the name board standing on it) form one liftable group for the open-roof view.
   roofGroup = roof();
   roofGroup.userData.mergeBucket = true;
+  roofGroup.userData.animated = true;
   root.add(roofGroup);
+  roofInfill(roofGroup);
   const lights = lanterns();
   garden();
 

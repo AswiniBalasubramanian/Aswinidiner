@@ -63,6 +63,6 @@ export function mergeStatic(root) {
     o.geometry.dispose();
   }
   // Empty groups left behind are harmless; freeze static transforms.
-  root.traverse((o) => { if (!o.userData.noMerge && o !== root && !o.isLight) o.matrixAutoUpdate = false; });
+  root.traverse((o) => { if (!o.userData.noMerge && !o.userData.animated && o !== root && !o.isLight) o.matrixAutoUpdate = false; });
   return merged;
 }

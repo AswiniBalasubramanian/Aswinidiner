@@ -176,6 +176,7 @@ function updateRoof(dt) {
   roofLift += (target - roofLift) * Math.min(1, dt * 5);
   if (Math.abs(target - roofLift) < 0.002) roofLift = target;
   world.roof.position.y = roofLift * 2.5;
+  world.roof.updateMatrix(); // static-merge freezes auto updates; the roof is the one part that moves
   world.roof.visible = roofLift < 0.45;
 }
 roofBtn.addEventListener('click', () => setRoofOpen(!roofOpen));
